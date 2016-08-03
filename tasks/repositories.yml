@@ -1,0 +1,13 @@
+---
+- name: Install EPEL repository
+  yum: pkg=epel-release state=latest
+
+- name: Import Remi GPG key.
+  rpm_key: "key={{ item }} state=present"
+  with_items:
+    - "http://rpms.famillecollet.com/RPM-GPG-KEY-remi"
+
+- name: Install Remi repository
+  yum:
+    name: http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+    state: present

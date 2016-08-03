@@ -1,0 +1,12 @@
+---
+- name: "Ensure usefull tools are installed"
+  yum: state=present name={{ item }}
+  with_items:
+    - wget
+    - gcc
+    - make
+    - git
+    - gdb
+    - unzip
+    - htop
+    - vim

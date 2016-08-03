@@ -1,0 +1,3 @@
+---
+- name: "Ensure SELinux mode is permissive"
+  selinux: policy=targeted state=permissive

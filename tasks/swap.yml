@@ -1,0 +1,2 @@
+---
+sudo fallocate -l 4G /swapfile

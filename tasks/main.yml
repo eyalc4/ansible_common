@@ -1,0 +1,5 @@
+---
+# Install common server tools
+- include: repositories.yml
+- include: tools.yml
+- include: security.yml

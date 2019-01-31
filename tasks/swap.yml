@@ -1,2 +1,30 @@
 ---
-sudo fallocate -l 4G /swapfile
+- name: Check if swap is setup
+  command: swapon -s
+  register: is_swap_on
+  changed_when: is_swap_on.stdout == ""
+
+- name: Check if swap file exists
+  stat:
+    path: "{{ swap_file_path }}"
+    get_checksum: no
+    get_md5: no
+    get_mime: no
+    get_attributes: no
+  register: swap_file
+  ignore_errors: True
+
+- name: Make sure swapfile has been allocated
+  command: "fallocate -l {{ swap_size }} /swapfile"
+  when: is_swap_on.stdout == "" and (not swap_file.stat.exists is defined or not swap_file.stat.exists)
+
+- name: Make sure the swap file has the proper permissions
+  file: path="{{ swap_file_path }}" mode=0600 owner=root group=root
+
+- name: Make sure the system uses the swapfile as swap
+  command: "mkswap {{ swap_file_path }}"
+  when: is_swap_on.stdout == ""
+
+- name: Make sure the swap on
+  command: "swapon {{ swap_file_path }}"
+  when: is_swap_on.stdout == ""

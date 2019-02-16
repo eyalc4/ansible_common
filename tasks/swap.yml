@@ -14,18 +14,33 @@
   register: swap_file
   ignore_errors: True
 
-- name: Make sure swapfile has been allocated
-  command: "fallocate -l {{ swap_size }} /swapfile"
+- name: Allocate swapfile
+  command: "dd if=/dev/zero of={{ swap_file_path }} count={{ swap_size_mb }} bs=1MiB"
   register: swap_file_created
   when: (not swap_file.stat.exists is defined or not swap_file.stat.exists)
 
 - name: Make sure the swap file has the proper permissions
   file: path="{{ swap_file_path }}" mode=0600 owner=root group=root
 
-- name: Make sure the system uses the swapfile as swap
+- name: Turn the created swap file into a usable swap
   command: "mkswap {{ swap_file_path }}"
-  when: {{ swap_file_path }} not in is_swap_on.stdout or (not swap_file.stat.exists is defined or not swap_file.stat.exists)
+  when: (swap_file_path not in is_swap_on.stdout) or not (swap_file.stat.exists is defined and swap_file.stat.exists)
 
-- name: Make sure the swap on
-  command: "swapon {{ swap_file_path }}"
-  when: "{{ swap_file_path }} not in is_swap_on.stdout or (not swap_file.stat.exists is defined or not swap_file.stat.exists)"
+- name: Enable the file {{ swap_file_path }} as swap
+  shell: "swapon {{ swap_file_path }}"
+  when: (swap_file_path not in is_swap_on.stdout) or not(swap_file.stat.exists is defined or swap_file.stat.exists)
+
+- name: Make sure the swapfile is automatically loaded when the system starts
+  lineinfile: dest=/etc/fstab state=present line="{{ swap_file_path }}   swap    swap    sw  0   0"
+
+- name: Check the swapiness level
+  command: "sysctl vm.swappiness"
+  register: swapiness_level
+  changed_when: false
+
+- name: Make sure the swapiness level is 10
+  command: "sysctl vm.swappiness=10"
+  when: '"10" not in swapiness_level.stdout'
+
+- name: Make sure the swapiness level is set to 10 on system start
+  lineinfile: dest=/etc/sysctl.conf state=present line="vm.swappiness = 10"

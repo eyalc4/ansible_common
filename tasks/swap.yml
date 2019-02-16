@@ -1,6 +1,6 @@
 ---
 - name: Check if swap is setup
-  command: swapon -s
+  shell: "swapon -s | grep {{ swap_file_path }}"
   register: is_swap_on
   changed_when: is_swap_on.stdout == ""
 
@@ -16,7 +16,7 @@
 
 - name: Make sure swapfile has been allocated
   command: "fallocate -l {{ swap_size }} /swapfile"
-  when: is_swap_on.stdout == "" and (not swap_file.stat.exists is defined or not swap_file.stat.exists)
+  when: (not swap_file.stat.exists is defined or not swap_file.stat.exists)
 
 - name: Make sure the swap file has the proper permissions
   file: path="{{ swap_file_path }}" mode=0600 owner=root group=root

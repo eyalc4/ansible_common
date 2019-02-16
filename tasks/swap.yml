@@ -28,4 +28,4 @@
 
 - name: Make sure the swap on
   command: "swapon {{ swap_file_path }}"
-  when: {{ swap_file_path }} not in is_swap_on.stdout or (not swap_file.stat.exists is defined or not swap_file.stat.exists)
+  when: "{{ swap_file_path }} not in is_swap_on.stdout or (not swap_file.stat.exists is defined or not swap_file.stat.exists)"
